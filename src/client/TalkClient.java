@@ -12,7 +12,7 @@ public class TalkClient {
 			while (true) {
 				String message = ioStream.sin.nextLine();
 				ioStream.os.write(message.getBytes("GBK"));
-				ioStream.os.write(255);// 添加255作为结束符
+				ioStream.addEOS();//添加流结束标识符
 				ioStream.os.flush();
 				System.out.println("sended!");
 			}

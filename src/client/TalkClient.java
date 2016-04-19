@@ -11,7 +11,7 @@ public class TalkClient {
 			IOStream ioStream = new IOStream(socket);
 			while (true) {
 				String message = ioStream.sin.nextLine();
-				ioStream.os.write(message.getBytes());
+				ioStream.os.write(message.getBytes("GBK"));
 				ioStream.os.write(255);// 添加255作为结束符
 				ioStream.os.flush();
 				System.out.println("sended!");

@@ -12,8 +12,8 @@ public class TalkServer {
 			IOStream ioStream = new IOStream(socket);
 
 			while (true) {
-				System.out.println(ioStream.getMessage());
-				System.out.println("received!");
+				String fileName = ioStream.fileFromStream();
+				System.out.println("a file named " + fileName + " received!");
 			}
 		} catch (Exception e) {
 			System.out.println("ErrorServer:" + e);

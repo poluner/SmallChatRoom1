@@ -5,13 +5,22 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class IOStream {
-	public PrintWriter os;
-	public BufferedReader is;
+	public OutputStream os;
+	public InputStream is;
 	public Scanner sin;
 
 	public IOStream(Socket socket) throws Exception {
-		os = new PrintWriter(socket.getOutputStream());// 由Socket对象得到输出流，并构造PrintWriter对象
-		is = new BufferedReader(new InputStreamReader(socket.getInputStream()));// 由Socket对象得到输入流，并构造相应的BufferedReader对象
+		os = socket.getOutputStream();
+		is = socket.getInputStream();
 		sin = new Scanner(System.in);
+	}
+
+	public String getMessage() throws Exception {
+		String message = "";
+		int c;
+		while ((c = is.read()) != 255) {// 255作为的结束符
+			message += (char) c;
+		}
+		return message;
 	}
 }

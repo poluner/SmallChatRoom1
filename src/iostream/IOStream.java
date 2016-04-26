@@ -3,6 +3,7 @@ package iostream;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.Vector;
 
 public class IOStream {
 	final static int EOSsize = 1000;// EndOfStream,流结束标志长度
@@ -16,10 +17,25 @@ public class IOStream {
 		sin = new Scanner(System.in);
 	}
 
-	public void addEOS() throws Exception {
+	public void addEOS() throws Exception {// EOS由一个254加EOSsize个255组成，避免文件结尾是255而误判成EOS
+		os.write(254);
 		for (int i = 0; i < EOSsize; i++) {
 			os.write(255);
 		}
+	}
+
+	public Vector<Integer> mayBeEOS() throws IOException {// 只有发现了一个254和EOSsize个255才是真正的EOS
+		Vector<Integer> vi = new Vector<Integer>();
+
+		vi.addElement(is.read());
+		if (vi.lastElement() != 254)
+			return vi;
+		for (int i = 0; i < EOSsize; i++) {
+			vi.addElement(is.read());
+			if (vi.lastElement() != 255)
+				return vi;
+		}
+		return vi;// 这里返回的才是EOS
 	}
 
 	public void fileToStream(String pathName) throws Exception {// 将文件pathName写入到流中
@@ -46,21 +62,13 @@ public class IOStream {
 		String fileName = "tmp" + fileType;
 		FileOutputStream fos = new FileOutputStream(fileName);
 
-		int c[] = new int[EOSsize];
 		while (true) {
-			for (int i = 0; i < EOSsize; i++)
-				c[i] = -1;
-
-			for (int i = 0; i < EOSsize; i++) {
-				if ((c[i] = is.read()) != 255)
-					break;
-			}
-			if (c[EOSsize - 1] == 255)
-				break;
-			for (int i = 0; i < EOSsize; i++) {
-				if (c[i] == -1)
-					break;
-				fos.write(c[i]);
+			Vector<Integer> mayBeEos = mayBeEOS();
+			if (mayBeEos.size() == EOSsize + 1)
+				break;// 如果是真正的EOS就结束了
+			
+			for (Integer c : mayBeEos) {
+				fos.write(c);
 			}
 		}
 		fos.close();

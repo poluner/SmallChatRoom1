@@ -12,8 +12,6 @@ public class TalkClient {
 			while (true) {
 				String pathName = ioStream.sin.nextLine();
 				ioStream.fileToStream(pathName);
-				ioStream.addEOS();// 添加流结束标识符
-				ioStream.os.flush();
 				System.out.println("sended a file!");
 			}
 		} catch (Exception e) {

@@ -16,52 +16,63 @@ public class IOStream {
 		sin = new Scanner(System.in);
 	}
 
-	public void addEOS() throws Exception {
-		for (int i = 0; i < EOSsize; i++) {
-			os.write(255);
+	static byte[] longToType(long l) {
+		byte[] b = new byte[8];
+		for (int i = 0; i < 8; i++) {
+			b[i] = (byte) (l & 0xff);
+			l >>= 8;
 		}
+		return b;
+	}
+
+	static long typeToLong(byte[] b) {
+		long l = 0;
+		for (int i = 7; i >= 0; i--) {
+			l <<= 8;
+			l |= b[i] & 0xff;
+		}
+		return l;
 	}
 
 	public void fileToStream(String pathName) throws Exception {// 将文件pathName写入到流中
+		File f = new File(pathName);
+
 		String fileType = pathName.substring(pathName.indexOf('.'), pathName.length());
 
-		os.write(fileType.getBytes());// 传入文件类型
-		os.write(128);// 由于文件类型是西文字符，范围在0~127，用128作为分隔符即可
+		byte b[] = fileType.getBytes("GBK");
 
-		FileInputStream fis = new FileInputStream(pathName);
+		os.write(longToType(f.length()));
+		os.write(b.length);
+		os.write(b);// 长度为b.length
+
+		FileInputStream fis = new FileInputStream(f);
+
 		int c;
-		while ((c = fis.read()) != -1) {// 文件结束标志是-1
+		while ((c = fis.read()) != -1) {// 长度为f.length()
 			os.write(c);
 		}
+		System.out.println("done");
 		fis.close();
+		os.flush();
 	}
 
 	public String fileFromStream() throws Exception {// 从流中获得文件，返回文件名
-		String fileType = "";// 文件类型
-		int c0;
-		while ((c0 = is.read()) != 128) {// 文件名是西文字符范围0~127，所以用128作为分隔符
-			fileType += (char) c0;
+		byte tb[] = new byte[8];
+		for (int i = 0; i < 8; i++) {
+			tb[i] = (byte) is.read();
 		}
+		long fileLength = typeToLong(tb);
 
+		int fileTypeLength = is.read();
+		byte b[] = new byte[fileTypeLength];
+		for (int i = 0; i < fileTypeLength; i++) {
+			b[i] = (byte) is.read();
+		}
+		String fileType = new String(b, "GBK");
 		String fileName = "tmp" + fileType;
 		FileOutputStream fos = new FileOutputStream(fileName);
-
-		int c[] = new int[EOSsize];
-		while (true) {
-			for (int i = 0; i < EOSsize; i++)
-				c[i] = -1;
-
-			for (int i = 0; i < EOSsize; i++) {
-				if ((c[i] = is.read()) != 255)
-					break;
-			}
-			if (c[EOSsize - 1] == 255)
-				break;
-			for (int i = 0; i < EOSsize; i++) {
-				if (c[i] == -1)
-					break;
-				fos.write(c[i]);
-			}
+		while (fileLength-- > 0) {
+			fos.write(is.read());
 		}
 		fos.close();
 		return fileName;

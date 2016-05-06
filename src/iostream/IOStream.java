@@ -16,11 +16,10 @@ public class IOStream {
 	}
 
 	public String getMessage() throws Exception {
+		int length=is.read();
 		byte b[]=new byte[102400];
-		int cnt=0;		
-		int c;
-		while ((c = is.read()) != 255) {// 255作为的结束符
-			b[cnt++]= (byte) c;
+		for(int i=0;i<length;i++){
+			b[i]=(byte) is.read();
 		}
 		return new String(b,"GBK");
 	}

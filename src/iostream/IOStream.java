@@ -39,7 +39,9 @@ public class IOStream {
 		int fileTypeLength = is.readInt();// 下载文件类型长度
 
 		byte b[] = new byte[fileTypeLength];
-		is.read(b, 0, fileTypeLength);// 下载文件类型，文件类型长度一般很短，可以一次写入数组
+		for (int i = 0; i < fileTypeLength; i++) {//用is.read(b,0,fileTypeLength);可能一次都不完，所以还不如用循环
+			b[i] = is.readByte();
+		}
 		String fileType = new String(b, "GBK");
 
 		String fileName = "tmp" + fileType;

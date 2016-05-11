@@ -5,73 +5,46 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class IOStream {
-	final static int EOSsize = 1000;// EndOfStream,流结束标志长度
-	public OutputStream os;
-	public InputStream is;
+	public DataOutputStream os;
+	public DataInputStream is;
 	public Scanner sin;
 
 	public IOStream(Socket socket) throws Exception {
-		os = socket.getOutputStream();
-		is = socket.getInputStream();
+		os = new DataOutputStream(socket.getOutputStream());
+		is = new DataInputStream(socket.getInputStream());
 		sin = new Scanner(System.in);
-	}
-
-	static byte[] longToType(long l) {
-		byte[] b = new byte[8];
-		for (int i = 0; i < 8; i++) {
-			b[i] = (byte) (l & 0xff);
-			l >>= 8;
-		}
-		return b;
-	}
-
-	static long typeToLong(byte[] b) {
-		long l = 0;
-		for (int i = 7; i >= 0; i--) {
-			l <<= 8;
-			l |= b[i] & 0xff;
-		}
-		return l;
 	}
 
 	public void fileToStream(String pathName) throws Exception {// 将文件pathName写入到流中
 		File f = new File(pathName);
+		os.writeLong(f.length());// 上传文件长度long
 
 		String fileType = pathName.substring(pathName.indexOf('.'), pathName.length());
-
 		byte b[] = fileType.getBytes("GBK");
+		os.writeInt(b.length);// 上传文件类型长度int
 
-		os.write(longToType(f.length()));
-		os.write(b.length);
-		os.write(b);// 长度为b.length
+		os.write(b);// 上传文件类型
 
 		FileInputStream fis = new FileInputStream(f);
-
 		int c;
-		while ((c = fis.read()) != -1) {// 长度为f.length()
+		while ((c = fis.read()) != -1) {// 上传文件
 			os.write(c);
 		}
-		System.out.println("done");
 		fis.close();
 		os.flush();
 	}
 
 	public String fileFromStream() throws Exception {// 从流中获得文件，返回文件名
-		byte tb[] = new byte[8];
-		for (int i = 0; i < 8; i++) {
-			tb[i] = (byte) is.read();
-		}
-		long fileLength = typeToLong(tb);
+		long fileLength = is.readLong();// 下载文件长度
+		int fileTypeLength = is.readInt();// 下载文件类型长度
 
-		int fileTypeLength = is.read();
 		byte b[] = new byte[fileTypeLength];
-		for (int i = 0; i < fileTypeLength; i++) {
-			b[i] = (byte) is.read();
-		}
+		is.read(b, 0, fileTypeLength);// 下载文件类型，文件类型长度一般很短，可以一次写入数组
 		String fileType = new String(b, "GBK");
+
 		String fileName = "tmp" + fileType;
 		FileOutputStream fos = new FileOutputStream(fileName);
-		while (fileLength-- > 0) {
+		while (fileLength-- > 0) {// 下载文件并写入本地
 			fos.write(is.read());
 		}
 		fos.close();

@@ -1,7 +1,6 @@
 package client;
 
 import java.net.*;
-
 import iostream.*;
 
 public class TalkClient {
